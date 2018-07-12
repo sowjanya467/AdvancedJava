@@ -16,14 +16,29 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "logindb")
 public class User implements Serializable {
 
-	
 	private static final long serialVersionUID = 1L;
 	@Id
 	private String emailId;
 	private Long userId;
 	private String userName;
 	private String password;
-	private long phoneNumber;
+	private String phoneNumber;
+	private String activate;
+
+	/**
+	 * @return the activate
+	 */
+	public String getActivate() {
+		return activate;
+	}
+
+	/**
+	 * @param activate
+	 *            the activate to set
+	 */
+	public void setActivate(String activate) {
+		this.activate = activate;
+	}
 
 	/**
 	 * @return the userId
@@ -39,8 +54,8 @@ public class User implements Serializable {
 	 */
 	@Override
 	public String toString() {
-		return "User [userId=" + userId + ", userName=" + userName + ", emailId=" + emailId + ", password=" + password
-				+ ", phoneNumber=" + phoneNumber + "]";
+		return "User [emailId=" + emailId + ", userId=" + userId + ", userName=" + userName + ", password=" + password
+				+ ", phoneNumber=" + phoneNumber + ", activate=" + activate + "]";
 	}
 
 	/**
@@ -99,7 +114,7 @@ public class User implements Serializable {
 	/**
 	 * @return the phoneNumber
 	 */
-	public long getPhoneNumber() {
+	public String getPhoneNumber() {
 		return phoneNumber;
 	}
 
@@ -107,7 +122,7 @@ public class User implements Serializable {
 	 * @param phoneNumber
 	 *            the phoneNumber to set
 	 */
-	public void setPhoneNumber(long phoneNumber) {
+	public void setPhoneNumber(String phoneNumber) {
 		this.phoneNumber = phoneNumber;
 	}
 }

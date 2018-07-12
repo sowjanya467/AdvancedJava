@@ -2,6 +2,8 @@ package com.bridgelabz.LoginMongodb;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 /*************************************************************************************************************
  *
@@ -13,6 +15,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  **************************************************************************************************/
 @SpringBootApplication
+//@EnableMongoRepositories(basePackages="com.bridgelabz.LoginMongodb.repositoriy")
+//@ComponentScan(basePackages= {"com.bridgelabz.LoginMongodb.service","com.bridgelabz.LoginMongodb.controller",})
 public class LoginMongodbApplication 
 {
 

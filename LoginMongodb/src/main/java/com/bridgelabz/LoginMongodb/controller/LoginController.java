@@ -1,13 +1,7 @@
 package com.bridgelabz.LoginMongodb.controller;
 
-/*************************************************************************************************************
-*
-* purpose:Controller class for register and sign up using MongoDB
-* @author sowjanya467
-* @version 1.0
-* @since 10-07-18
-*
-* **************************************************************************************************/
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +16,17 @@ import com.bridgelabz.LoginMongodb.modell.User;
 import com.bridgelabz.LoginMongodb.service.UserServiceImplementation;
 import com.bridgelabz.LoginMongodb.tokens.CreateTokens;
 
+/*************************************************************************************************************
+ *
+ * purpose:Controller class for register and sign up using MongoDB
+ * 
+ * @author sowjanya467
+ * @version 1.0
+ * @since 10-07-18
+ *
+ **************************************************************************************************/
 @RestController
-public class LoginController 
-{
+public class LoginController {
 
 	public static final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
@@ -32,53 +34,94 @@ public class LoginController
 	UserServiceImplementation userService = new UserServiceImplementation();
 	CreateTokens tok = new CreateTokens();
 
-	@SuppressWarnings("unchecked")
-	@RequestMapping(value = "/login/", method = RequestMethod.POST)
 	/**
 	 * purpose:method to login
 	 * 
 	 * @param checkUser
 	 * @return response
 	 */
-	public ResponseEntity<String> login(@RequestBody User checkUser) 
-	{
+
+	@RequestMapping(value = "/login/", method = RequestMethod.POST)
+	public ResponseEntity<String> login(@RequestBody User checkUser) {
 		logger.info("Logging User : {}", checkUser);
 
 		User user = userService.login(checkUser.getEmailId(), checkUser.getPassword());
 		if (user == null) {
+
 			logger.error("User with email {} not found.", checkUser.getEmailId());
-			return new ResponseEntity("User with email " + checkUser.getEmailId() + " not found", HttpStatus.NOT_FOUND);
+			return new ResponseEntity<String>("User with email " + checkUser.getEmailId() + " not found",
+					HttpStatus.NOT_FOUND);
 		}
-		String message = "Hello, " + user.getUserName() + " Id:- " + user.getUserId() + " Email:- " + user.getEmailId()
-				+ " Phone Number:- " + user.getPhoneNumber();
 
 		String token = tok.createToken(user);
 		System.out.println("token-----" + token);
 		tok.parseJwt(token);
+		// tok.token();
+		String message = "Hello, " + user.getUserName() + " Id:- " + user.getUserId() + " Email:- " + user.getEmailId()
+				+ " Phone Number:- " + user.getPhoneNumber() + "  " + token;
 		return new ResponseEntity<String>(message, HttpStatus.OK);
 	}
 
-	@SuppressWarnings("unchecked")
-	@RequestMapping(value = "/register/", method = RequestMethod.POST)
 	/**
 	 * purpose:method to register
 	 * 
 	 * @param checkUser
 	 * @return response
 	 */
-	public ResponseEntity<String> register(@RequestBody User checkUser) 
-	{
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@RequestMapping(value = "/register/", method = RequestMethod.POST)
+	public ResponseEntity<String> register(@RequestBody User checkUser) {
 		logger.info("Register user : {}", checkUser);
 
 		boolean registered = userService.register(checkUser);
-		if (!registered) 
-		{
+		if (!registered) {
 			logger.error("User with email {} already present.", checkUser.getEmailId());
 			return new ResponseEntity("User with email " + checkUser.getEmailId() + " already present",
 					HttpStatus.CONFLICT);
 		}
+		String mail = checkUser.getEmailId();
 		logger.info("User registered with : {}", checkUser.getEmailId());
-		String message = "Successfully registired";
+		String token = tok.createToken(checkUser);
+
+		String message = "Successfully registired  " + token;
+		tok.activationLink(token, mail);
 		return new ResponseEntity<String>(message, HttpStatus.OK);
+	}
+
+	/**
+	 * purpose:method to activate the account once registered
+	 * 
+	 * @param hsr
+	 * @return
+	 */
+
+	@RequestMapping(value = "/activateaccount/")
+	public ResponseEntity<String> activateAccount(HttpServletRequest request) {
+		String m = request.getQueryString();
+
+		if (!userService.activateAc(m)) {
+
+			return new ResponseEntity<String>("Account not activated ", HttpStatus.NOT_FOUND);
+		}
+		String message = "account avtivated successfully";
+		return new ResponseEntity<String>(message, HttpStatus.OK);
+	}
+
+	/**
+	 * method to reset the password
+	 * 
+	 * @param CheckUser
+	 * @return
+	 */
+	@RequestMapping(value = "/forgotpassword/", method = RequestMethod.POST)
+	public ResponseEntity<String> forgotPassword(@RequestBody User CheckUser) {
+		String email = CheckUser.getEmailId();
+		if (userService.forgotPassword(email)) {
+			return new ResponseEntity<String>("invalid", HttpStatus.NOT_FOUND);
+		}
+		String message = "password is set";
+		return new ResponseEntity<String>(message, HttpStatus.OK);
+
 	}
 }
