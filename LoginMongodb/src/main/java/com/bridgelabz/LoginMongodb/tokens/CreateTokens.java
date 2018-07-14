@@ -42,7 +42,6 @@ public class CreateTokens {
 		String subject = user.getEmailId();
 		String issuer = user.getUserName();
 		Date date = new Date();
-
 		JwtBuilder builder = Jwts.builder().setSubject(subject).setIssuedAt(date).setIssuer(issuer)
 				.signWith(signatureAlgorithm, KEY);
 		return builder.compact();
@@ -73,7 +72,7 @@ public class CreateTokens {
 		String pass = "palem489";
 
 		String subject = "activate your account";
-		String body = " to activate your account click the link " + "http://192.168.0.6:8080/activateaccount/?" + token;
+		String body = " to activate your account click the link " + "http://192.168.0.8:8080/activateaccount/?" + token;
 
 		System.out.println("activation link");
 		Properties props = new Properties();

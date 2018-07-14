@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bridgelabz.LoginMongodb.dto.ResponseDto;
+import com.bridgelabz.LoginMongodb.exception.ToDoException;
+import com.bridgelabz.LoginMongodb.exceptionhandling.LoginExceptionHandling;
+import com.bridgelabz.LoginMongodb.exceptionhandling.UserExceptionHandling;
 import com.bridgelabz.LoginMongodb.modell.User;
 import com.bridgelabz.LoginMongodb.service.UserServiceImplementation;
 import com.bridgelabz.LoginMongodb.tokens.CreateTokens;
@@ -26,9 +30,10 @@ import com.bridgelabz.LoginMongodb.tokens.CreateTokens;
  *
  **************************************************************************************************/
 @RestController
-public class LoginController {
+public class UserController {
 
-	public static final Logger logger = LoggerFactory.getLogger(LoginController.class);
+	public static final Logger logger = LoggerFactory.getLogger(UserController.class);
+	ToDoException todo=new ToDoException();
 
 	@Autowired
 	UserServiceImplementation userService = new UserServiceImplementation();
@@ -39,27 +44,23 @@ public class LoginController {
 	 * 
 	 * @param checkUser
 	 * @return response
+	 * @throws LoginExceptionHandling 
 	 */
 
 	@RequestMapping(value = "/login/", method = RequestMethod.POST)
-	public ResponseEntity<String> login(@RequestBody User checkUser) {
+	public ResponseEntity<ResponseDto> login(@RequestBody User checkUser) throws UserExceptionHandling, LoginExceptionHandling {
 		logger.info("Logging User : {}", checkUser);
 
-		User user = userService.login(checkUser.getEmailId(), checkUser.getPassword());
-		if (user == null) {
+		userService.login(checkUser.getEmailId(), checkUser.getPassword());
+		ResponseDto response=new ResponseDto();
+				String message = "Hello, " + checkUser.getUserName() + " Id:- " + checkUser.getUserId() + " Email:- " + checkUser.getEmailId()
+						+ " Phone Number:- " + checkUser.getPhoneNumber() ;
+		response.setMessage(message);
+		response.setStatus(200);
+		
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
 
-			logger.error("User with email {} not found.", checkUser.getEmailId());
-			return new ResponseEntity<String>("User with email " + checkUser.getEmailId() + " not found",
-					HttpStatus.NOT_FOUND);
-		}
-
-		String token = tok.createToken(user);
-		System.out.println("token-----" + token);
-		tok.parseJwt(token);
-		// tok.token();
-		String message = "Hello, " + user.getUserName() + " Id:- " + user.getUserId() + " Email:- " + user.getEmailId()
-				+ " Phone Number:- " + user.getPhoneNumber() + "  " + token;
-		return new ResponseEntity<String>(message, HttpStatus.OK);
+		
 	}
 
 	/**
@@ -67,26 +68,20 @@ public class LoginController {
 	 * 
 	 * @param checkUser
 	 * @return response
+	 * @throws UserExceptionHandling 
 	 */
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@RequestMapping(value = "/register/", method = RequestMethod.POST)
-	public ResponseEntity<String> register(@RequestBody User checkUser) {
+	public ResponseEntity<ResponseDto> register(@RequestBody User checkUser) throws UserExceptionHandling {
 		logger.info("Register user : {}", checkUser);
 
-		boolean registered = userService.register(checkUser);
-		if (!registered) {
-			logger.error("User with email {} already present.", checkUser.getEmailId());
-			return new ResponseEntity("User with email " + checkUser.getEmailId() + " already present",
-					HttpStatus.CONFLICT);
-		}
-		String mail = checkUser.getEmailId();
-		logger.info("User registered with : {}", checkUser.getEmailId());
-		String token = tok.createToken(checkUser);
-
-		String message = "Successfully registired  " + token;
-		tok.activationLink(token, mail);
-		return new ResponseEntity<String>(message, HttpStatus.OK);
+		
+		userService.register(checkUser);
+		ResponseDto response = new ResponseDto();
+		response.setMessage("Registeration Successfull!!");
+		response.setStatus(1);
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
 	/**
@@ -96,7 +91,7 @@ public class LoginController {
 	 * @return
 	 */
 
-	@RequestMapping(value = "/activateaccount/")
+	@RequestMapping(value = "/activateaccount")
 	public ResponseEntity<String> activateAccount(HttpServletRequest request) {
 		String m = request.getQueryString();
 
@@ -124,4 +119,6 @@ public class LoginController {
 		return new ResponseEntity<String>(message, HttpStatus.OK);
 
 	}
+	
+	
 }

@@ -19,11 +19,15 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.springframework.aop.ThrowsAdvice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.bridgelabz.LoginMongodb.exceptionhandling.LoginExceptionHandling;
+import com.bridgelabz.LoginMongodb.exceptionhandling.UserExceptionHandling;
 import com.bridgelabz.LoginMongodb.modell.User;
 import com.bridgelabz.LoginMongodb.repositoriy.UserRepository;
+import com.bridgelabz.LoginMongodb.tokens.CreateTokens;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -43,6 +47,7 @@ public class UserServiceImplementation {
 
 	@Autowired
 	private UserRepository repo;
+	CreateTokens token=new CreateTokens();
 
 	/**
 	 * purpose : method to login in to page
@@ -50,18 +55,25 @@ public class UserServiceImplementation {
 	 * @param emailId
 	 * @param password
 	 * @return User
+	 * @throws LoginExceptionHandling 
 	 */
-	public User login(String emailId, String password) {
+	public void  login(String emailId, String password) throws LoginExceptionHandling {
 
 		Optional<User> user = repo.findById(emailId);
 
 		if (user.isPresent()) {
 			if (user.get().getPassword().equals(password)) {
-				return user.get();
+				System.out.println("looged in sucessfully!! continue your works");
+				
+
+			}
+			else {
+				throw new LoginExceptionHandling(" entered password incorrect");
 			}
 		}
+		
 
-		return null;
+		
 	}
 
 	/**
@@ -69,17 +81,24 @@ public class UserServiceImplementation {
 	 * 
 	 * @param user
 	 * @return boolean
+	 * @throws UserExceptionHandling 
 	 */
-	public boolean register(User user) {
+	public void register(User user) throws UserExceptionHandling {
 		Optional<User> checkUser = repo.findById(user.getEmailId());
-		System.out.println("sdj");
-		if (checkUser.isPresent() == false) {
-			System.out.println("test true");
-			repo.save(user);
-			return true;
-		} else {
-			return false;
+		if(checkUser.isPresent())
+		{
+			System.out.println("user with this email id is already present");
+			throw new UserExceptionHandling("user with this email id is already present");
 		}
+		repo.save(user);
+		String mail = user.getEmailId();
+		//logger.info("User registered with : {}", checkUser.getEmailId());
+		String tokenjwt = token.createToken(user);
+		System.out.println(tokenjwt);
+		String message = "Successfully registired ** " + tokenjwt;
+		System.out.println(message);
+		token.activationLink(tokenjwt, mail);
+		
 
 	}
 
@@ -95,13 +114,13 @@ public class UserServiceImplementation {
 
 		System.out.println(claims.getSubject());
 
-		if (repo == null) {
-
-			System.out.println("finally null");
+		if(repo==null)
+		{
+			System.out.println("null");
 		}
 
 		Optional<User> user = repo.findById(claims.getSubject());
-		System.out.println("dsd");
+		//System.out.println("dsd");
 		user.get().setActivate("true");
 		System.out.println("activate");
 		repo.save(user.get());
@@ -109,6 +128,11 @@ public class UserServiceImplementation {
 		return true;
 
 	}
+	/**
+	 * 
+	 * @param emailId
+	 * @return
+	 */
 
 	public boolean forgotPassword(String emailId) {
 		String from = "msowjanya2014@gmail.com";
