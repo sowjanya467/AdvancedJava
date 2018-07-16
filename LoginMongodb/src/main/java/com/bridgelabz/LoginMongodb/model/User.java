@@ -1,4 +1,4 @@
-package com.bridgelabz.LoginMongodb.modell;
+package com.bridgelabz.LoginMongodb.model;
 
 /*************************************************************************************************************
 *

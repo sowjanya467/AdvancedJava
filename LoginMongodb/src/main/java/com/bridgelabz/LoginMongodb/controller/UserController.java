@@ -1,5 +1,6 @@
 package com.bridgelabz.LoginMongodb.controller;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -12,13 +13,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bridgelabz.LoginMongodb.dto.ResponseDto;
-import com.bridgelabz.LoginMongodb.exception.ToDoException;
 import com.bridgelabz.LoginMongodb.exceptionhandling.LoginExceptionHandling;
+import com.bridgelabz.LoginMongodb.exceptionhandling.ToDoException;
 import com.bridgelabz.LoginMongodb.exceptionhandling.UserExceptionHandling;
-import com.bridgelabz.LoginMongodb.modell.User;
+import com.bridgelabz.LoginMongodb.model.ForgotPasswordmodel;
+import com.bridgelabz.LoginMongodb.model.RegistrationModel;
+import com.bridgelabz.LoginMongodb.model.ResponseDto;
+import com.bridgelabz.LoginMongodb.model.User;
 import com.bridgelabz.LoginMongodb.service.UserServiceImplementation;
-import com.bridgelabz.LoginMongodb.tokens.CreateTokens;
+import com.bridgelabz.LoginMongodb.utility.CreateTokens;
+import com.bridgelabz.LoginMongodb.utility.Utility;
 
 /*************************************************************************************************************
  *
@@ -33,34 +37,32 @@ import com.bridgelabz.LoginMongodb.tokens.CreateTokens;
 public class UserController {
 
 	public static final Logger logger = LoggerFactory.getLogger(UserController.class);
-	ToDoException todo=new ToDoException();
 
 	@Autowired
 	UserServiceImplementation userService = new UserServiceImplementation();
 	CreateTokens tok = new CreateTokens();
+	Utility utility = new Utility();
 
 	/**
 	 * purpose:method to login
 	 * 
 	 * @param checkUser
 	 * @return response
-	 * @throws LoginExceptionHandling 
+	 * @throws LoginExceptionHandling
 	 */
 
 	@RequestMapping(value = "/login/", method = RequestMethod.POST)
-	public ResponseEntity<ResponseDto> login(@RequestBody User checkUser) throws UserExceptionHandling, LoginExceptionHandling {
+	public ResponseEntity<ResponseDto> login(@RequestBody User checkUser)
+			throws UserExceptionHandling, LoginExceptionHandling {
 		logger.info("Logging User : {}", checkUser);
 
-		userService.login(checkUser.getEmailId(), checkUser.getPassword());
-		ResponseDto response=new ResponseDto();
-				String message = "Hello, " + checkUser.getUserName() + " Id:- " + checkUser.getUserId() + " Email:- " + checkUser.getEmailId()
-						+ " Phone Number:- " + checkUser.getPhoneNumber() ;
+		String message = userService.login(checkUser.getEmailId(), checkUser.getPassword());
+		ResponseDto response = new ResponseDto();
 		response.setMessage(message);
 		response.setStatus(200);
-		
+
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 
-		
 	}
 
 	/**
@@ -68,19 +70,21 @@ public class UserController {
 	 * 
 	 * @param checkUser
 	 * @return response
-	 * @throws UserExceptionHandling 
+	 * @throws UserExceptionHandling
+	 * @throws MessagingException
 	 */
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@RequestMapping(value = "/register/", method = RequestMethod.POST)
-	public ResponseEntity<ResponseDto> register(@RequestBody User checkUser) throws UserExceptionHandling {
+	public ResponseEntity<ResponseDto> register(@RequestBody RegistrationModel checkUser)
+			throws UserExceptionHandling, MessagingException {
+		//utility.isValidateAllFields(checkUser);
 		logger.info("Register user : {}", checkUser);
 
-		
-		userService.register(checkUser);
+		userService.registerUser(checkUser);
 		ResponseDto response = new ResponseDto();
 		response.setMessage("Registeration Successfull!!");
-		response.setStatus(1);
+		response.setStatus(200);
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
@@ -91,7 +95,7 @@ public class UserController {
 	 * @return
 	 */
 
-	@RequestMapping(value = "/activateaccount")
+	@RequestMapping(value = "/activateaccount", method = RequestMethod.GET)
 	public ResponseEntity<String> activateAccount(HttpServletRequest request) {
 		String m = request.getQueryString();
 
@@ -104,7 +108,7 @@ public class UserController {
 	}
 
 	/**
-	 * method to reset the password
+	 * method to send link if user forgot the password
 	 * 
 	 * @param CheckUser
 	 * @return
@@ -115,10 +119,31 @@ public class UserController {
 		if (userService.forgotPassword(email)) {
 			return new ResponseEntity<String>("invalid", HttpStatus.NOT_FOUND);
 		}
-		String message = "password is set";
+		String message = "link to set your password has been sent successfully";
 		return new ResponseEntity<String>(message, HttpStatus.OK);
 
 	}
-	
-	
+
+	/**
+	 * method to reset the password
+	 * 
+	 * @param model
+	 * @param request
+	 * @return response
+	 * @throws ToDoException
+	 */
+
+	@RequestMapping(value = "/resetPassword", method = RequestMethod.POST)
+	public ResponseEntity<ResponseDto> resetPassword(@RequestBody ForgotPasswordmodel model, HttpServletRequest req)
+			throws ToDoException {
+		String token = req.getQueryString();
+
+		userService.setPassword(model, token);
+		ResponseDto response = new ResponseDto();
+		response.setStatus(200);
+		response.setMessage("password changed successfully!!!");
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+	}
+
 }

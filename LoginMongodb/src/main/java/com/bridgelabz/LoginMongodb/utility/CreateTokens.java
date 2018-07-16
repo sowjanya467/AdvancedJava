@@ -1,4 +1,4 @@
-package com.bridgelabz.LoginMongodb.tokens;
+package com.bridgelabz.LoginMongodb.utility;
 /*************************************************************************************************************
 *
 * purpose:Methode to create a JWT token and decode the token
@@ -19,7 +19,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.bridgelabz.LoginMongodb.modell.User;
+import com.bridgelabz.LoginMongodb.model.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
@@ -52,12 +52,14 @@ public class CreateTokens {
 	 * purpose: Decoding the token(to get details of user)
 	 * 
 	 * @param Jwt
+	 * @return 
 	 */
-	public void parseJwt(String Jwt) {
+	public Claims parseJwt(String Jwt) {
 		Claims claims = Jwts.parser().setSigningKey(KEY).parseClaimsJws(Jwt).getBody();
 		System.out.println("subject-" + claims.getSubject());
 		System.out.println("issuer-" + claims.getIssuer());
 		System.out.println("date-" + claims.getIssuedAt());
+		return claims;
 
 	}
 

@@ -1,4 +1,4 @@
-package com.bridgelabz.LoginMongodb.dto;
+package com.bridgelabz.LoginMongodb.model;
 
 public class ResponseDto 
 {
